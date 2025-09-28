@@ -4,14 +4,13 @@ const prisma = new PrismaClient();
 class ShelfController {
     async create(req, res) {
         try {
-            const { name, description } = req.body;
-            const userId = req.userId; // Vem do middleware de autenticação
+            const { name, description, userId = 1 } = req.body; // Usar userId padrão
 
             const shelf = await prisma.shelf.create({
                 data: {
                     name,
                     description,
-                    userId
+                    userId: parseInt(userId)
                 }
             });
 
@@ -23,10 +22,10 @@ class ShelfController {
 
     async findAll(req, res) {
         try {
-            const userId = req.userId; // Vem do middleware de autenticação
+            const { userId = 1 } = req.query; // Usar userId da query ou padrão
 
             const shelves = await prisma.shelf.findMany({
-                where: { userId },
+                where: { userId: parseInt(userId) },
                 include: {
                     books: {
                         include: {
@@ -50,12 +49,10 @@ class ShelfController {
     async findOne(req, res) {
         try {
             const { id } = req.params;
-            const userId = req.userId;
 
-            const shelf = await prisma.shelf.findFirst({
+            const shelf = await prisma.shelf.findUnique({
                 where: { 
-                    id: parseInt(id),
-                    userId 
+                    id: parseInt(id)
                 },
                 include: {
                     books: {
@@ -80,12 +77,10 @@ class ShelfController {
         try {
             const { id } = req.params;
             const { name, description } = req.body;
-            const userId = req.userId;
 
             const shelf = await prisma.shelf.update({
                 where: { 
-                    id: parseInt(id),
-                    userId
+                    id: parseInt(id)
                 },
                 data: {
                     name,
@@ -102,12 +97,10 @@ class ShelfController {
     async delete(req, res) {
         try {
             const { id } = req.params;
-            const userId = req.userId;
 
             await prisma.shelf.delete({
                 where: { 
-                    id: parseInt(id),
-                    userId
+                    id: parseInt(id)
                 }
             });
 
@@ -120,19 +113,6 @@ class ShelfController {
     async addBook(req, res) {
         try {
             const { shelfId, bookId } = req.body;
-            const userId = req.userId;
-
-            // Verifica se a estante pertence ao usuário
-            const shelf = await prisma.shelf.findFirst({
-                where: { 
-                    id: parseInt(shelfId),
-                    userId 
-                }
-            });
-
-            if (!shelf) {
-                return res.status(404).json({ error: 'Estante não encontrada' });
-            }
 
             const shelfBook = await prisma.shelfBook.create({
                 data: {
@@ -153,19 +133,6 @@ class ShelfController {
     async removeBook(req, res) {
         try {
             const { shelfId, bookId } = req.params;
-            const userId = req.userId;
-
-            // Verifica se a estante pertence ao usuário
-            const shelf = await prisma.shelf.findFirst({
-                where: { 
-                    id: parseInt(shelfId),
-                    userId 
-                }
-            });
-
-            if (!shelf) {
-                return res.status(404).json({ error: 'Estante não encontrada' });
-            }
 
             await prisma.shelfBook.delete({
                 where: {

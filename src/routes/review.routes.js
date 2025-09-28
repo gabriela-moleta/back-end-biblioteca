@@ -1,14 +1,10 @@
 import express from 'express';
 import reviewController from '../controllers/reviewController.js';
-import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Rotas públicas
+// Rotas de reviews (públicas para demonstração)
 router.get('/book/:bookId', reviewController.findByBook);
-
-// Rotas protegidas
-router.use(authMiddleware.auth);
 router.post('/', reviewController.create);
 router.put('/:id', reviewController.update);
 router.delete('/:id', reviewController.delete);

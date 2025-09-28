@@ -1,13 +1,12 @@
 import express from 'express';
 import favoriteController from '../controllers/favoriteController.js';
-import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Todas as rotas de favoritos requerem autenticação
-router.use(authMiddleware.auth);
-
+// Rotas de favoritos (públicas)
 router.post('/toggle', favoriteController.toggle);
+router.post('/', favoriteController.add);
+router.delete('/:bookId', favoriteController.remove);
 router.get('/', favoriteController.findAll);
 
 export default router;

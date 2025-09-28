@@ -1,28 +1,15 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import reviewModel from '../models/reviewModel.js';
 
 class ReviewController {
     async create(req, res) {
         try {
-            const { bookId, rating, comment } = req.body;
-            const userId = req.userId; // Vem do middleware de autenticação
+            const { bookId, rating, comment, userId = 1 } = req.body;
 
-            const review = await prisma.review.create({
-                data: {
-                    rating,
-                    comment,
-                    userId,
-                    bookId: parseInt(bookId)
-                },
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            avatar: true
-                        }
-                    }
-                }
+            const review = await reviewModel.create({
+                rating,
+                comment,
+                userId,
+                bookId
             });
 
             return res.status(201).json(review);
@@ -35,26 +22,10 @@ class ReviewController {
         try {
             const { id } = req.params;
             const { rating, comment } = req.body;
-            const userId = req.userId;
 
-            const review = await prisma.review.update({
-                where: { 
-                    id: parseInt(id),
-                    userId 
-                },
-                data: {
-                    rating,
-                    comment
-                },
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            avatar: true
-                        }
-                    }
-                }
+            const review = await reviewModel.update(id, {
+                rating,
+                comment
             });
 
             return res.json(review);
@@ -66,15 +37,7 @@ class ReviewController {
     async delete(req, res) {
         try {
             const { id } = req.params;
-            const userId = req.userId;
-
-            await prisma.review.delete({
-                where: { 
-                    id: parseInt(id),
-                    userId 
-                }
-            });
-
+            await reviewModel.delete(id);
             return res.status(204).send();
         } catch (error) {
             return res.status(400).json({ error: error.message });
@@ -84,23 +47,7 @@ class ReviewController {
     async findByBook(req, res) {
         try {
             const { bookId } = req.params;
-
-            const reviews = await prisma.review.findMany({
-                where: { bookId: parseInt(bookId) },
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            avatar: true
-                        }
-                    }
-                },
-                orderBy: {
-                    createdAt: 'desc'
-                }
-            });
-
+            const reviews = await reviewModel.findByBookId(bookId);
             return res.json(reviews);
         } catch (error) {
             return res.status(400).json({ error: error.message });
@@ -109,18 +56,8 @@ class ReviewController {
 
     async findByUser(req, res) {
         try {
-            const userId = req.userId;
-
-            const reviews = await prisma.review.findMany({
-                where: { userId },
-                include: {
-                    book: true
-                },
-                orderBy: {
-                    createdAt: 'desc'
-                }
-            });
-
+            const { userId = 1 } = req.query;
+            const reviews = await reviewModel.findByUserId(userId);
             return res.json(reviews);
         } catch (error) {
             return res.status(400).json({ error: error.message });
